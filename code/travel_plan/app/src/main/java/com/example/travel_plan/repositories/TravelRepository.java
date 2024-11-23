@@ -84,6 +84,13 @@ public class TravelRepository extends SQLiteOpenHelper {
         return travel;
     }
 
+    public Boolean deleteById(Long id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String[] whereArgs = {id.toString()};
+        db.delete(Travel.TBL_NAME, Travel.ID_FIELD + " = ?", whereArgs);
+        return true;
+    }
+
     private Travel mapCursor(Cursor cursor) {
         Travel travel = new Travel();
         travel.setId(cursor.getLong(0));

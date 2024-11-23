@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import androidx.annotation.Nullable;
-
 import com.example.travel_plan.config.SQLiteConfig;
 import com.example.travel_plan.entities.Task;
 import com.example.travel_plan.utils.DateUtils;
@@ -106,6 +105,13 @@ public class TaskRepository extends SQLiteOpenHelper {
             db.update(Task.TBL_NAME, contentValues, Task.ID_FIELD + " = ?", whereArgs);
         }
         return task;
+    }
+
+    public Boolean deleteById(Long id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String[] whereArgs = {id.toString()};
+        db.delete(Task.TBL_NAME, Task.ID_FIELD + " = ?", whereArgs);
+        return true;
     }
 
     public boolean changeTaskStatus(Long id, boolean status) {
