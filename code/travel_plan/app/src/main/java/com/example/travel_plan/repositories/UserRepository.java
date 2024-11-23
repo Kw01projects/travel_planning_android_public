@@ -57,6 +57,7 @@ public class UserRepository extends SQLiteOpenHelper {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+        cursor.close();
         return user;
     }
 
@@ -76,7 +77,6 @@ public class UserRepository extends SQLiteOpenHelper {
             user.setUpdatedAt(currentDate);
         } else
             user.setId(db.insert(User.TBL_NAME, null, contentValues));
-        System.out.println("save user: " + user.getId());
         return user;
     }
 }

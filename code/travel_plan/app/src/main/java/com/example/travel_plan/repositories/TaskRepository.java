@@ -38,6 +38,16 @@ public class TaskRepository extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
 
+    private Task mapCursor(Cursor cursor) {
+        Task task = new Task();
+        task.setId(cursor.getLong(0));
+        task.setTitle(cursor.getString(1));
+        task.setHasDone(cursor.getInt(2) != 0);
+        task.setStartDate(DateUtils.parseDbDate(cursor.getString(3)));
+        task.setStartTime(cursor.getString(4));
+        return task;
+    }
+
     public List<Task> getTaskListByDate(Date date) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] args = {DateUtils.formatDbDate(date)};
@@ -45,18 +55,24 @@ public class TaskRepository extends SQLiteOpenHelper {
                 args
         );
         List<Task> taskLists = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            Task task = new Task();
-            task.setId(cursor.getLong(0));
-            task.setTitle(cursor.getString(1));
-            task.setHasDone(cursor.getInt(2) != 0);
-            task.setStartDate(DateUtils.parseDbDate(cursor.getString(3)));
-            task.setStartTime(cursor.getString(4));
-            taskLists.add(task);
-        }
-//        taskLists.sort((a,b) -> a.getStartTime().compareTo(b.getStartTime()));
-        Collections.sort(taskLists, (a,b) -> a.getStartTime().compareTo(b.getStartTime()));
+        while (cursor.moveToNext())
+            taskLists.add(mapCursor(cursor));
+        cursor.close();
+        Collections.sort(taskLists, (a, b) -> a.getStartTime().compareTo(b.getStartTime()));
         return taskLists;
+    }
+
+    public Task findByDate(Date date) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] args = {DateUtils.formatDbDate(date)};
+        Cursor cursor = db.rawQuery("select * from " + Task.TBL_NAME + " where " + Task.START_DATE_AT_FIELD + " = ? ",
+                args
+        );
+        if (cursor.getCount() == 0) return null;
+        cursor.moveToNext();
+        Task task = mapCursor(cursor);
+        cursor.close();
+        return task;
     }
 
     public Task findById(Long id) {
@@ -67,13 +83,8 @@ public class TaskRepository extends SQLiteOpenHelper {
         );
         if (cursor.getCount() == 0) return null;
         cursor.moveToNext();
-        Task task = new Task();
-        task.setId(cursor.getLong(0));
-        task.setTitle(cursor.getString(1));
-        task.setHasDone(cursor.getInt(2) != 0);
-        String st = cursor.getString(3);
-        task.setStartDate(DateUtils.parseDbDate(cursor.getString(3)));
-        task.setStartTime(cursor.getString(4));
+        Task task = mapCursor(cursor);
+        cursor.close();
         return task;
     }
 

@@ -21,18 +21,19 @@ public class TravelRepository extends SQLiteOpenHelper {
 
     public TravelRepository(@Nullable Context context) {
         super(context, SQLiteConfig.DB_NAME, null, SQLiteConfig.DB_VERSION);
-        onCreate(this.getWritableDatabase());
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        this.onUpgrade(db, 1, 1);
-        db.execSQL(Travel.CREATE_TBL_SQL);
+        try {
+            //        db.execSQL("DROP TABLE IF EXISTS " + Travel.TBL_NAME + ";");
+            db.execSQL(Travel.CREATE_TBL_SQL);
+        } catch (Exception ex) {
+        }
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + Travel.TBL_NAME + ";");
     }
 
     public Travel save(Travel travel) {
@@ -41,12 +42,32 @@ public class TravelRepository extends SQLiteOpenHelper {
 
         ContentValues contentValues = new ContentValues();
         contentValues.put(Travel.TITLE_FIELD, travel.getTitle());
+        contentValues.put(Travel.PLACE_FIELD, travel.getPlace());
         contentValues.put(Travel.MEMO_FIELD, travel.getMemo());
         contentValues.put(Travel.EXPENSE_NOTE_FIELD, travel.getExpenseNote());
-        contentValues.put(BaseEntity.CREATED_AT_FIELD, DateUtils.formatDbDatetime(currentDate));
+        contentValues.put(Travel.START_DATE_AT_FIELD, DateUtils.formatDbDate(travel.getStartDate()));
         contentValues.put(BaseEntity.UPDATED_AT_FIELD, DateUtils.formatDbDatetime(currentDate));
 
-        travel.setId(db.insert(Travel.TBL_NAME, null, contentValues));
+        if (travel.getId() == null) {
+            contentValues.put(BaseEntity.CREATED_AT_FIELD, DateUtils.formatDbDatetime(currentDate));
+            travel.setId(db.insert(Travel.TBL_NAME, null, contentValues));
+        } else {
+            String[] whereArgs = {travel.getId().toString()};
+            db.update(Travel.TBL_NAME, contentValues, Travel.ID_FIELD + " = ?", whereArgs);
+        }
+        return travel;
+    }
+
+    public Travel findByDate(Date date) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] args = {DateUtils.formatDbDate(date)};
+        Cursor cursor = db.rawQuery("select * from " + Travel.TBL_NAME + " where " + Travel.START_DATE_AT_FIELD + " = ? ",
+                args
+        );
+        if (cursor.getCount() == 0) return null;
+        cursor.moveToNext();
+        Travel travel = this.mapCursor(cursor);
+        cursor.close();
         return travel;
     }
 
@@ -58,15 +79,21 @@ public class TravelRepository extends SQLiteOpenHelper {
         );
         if (cursor.getCount() == 0) return null;
         cursor.moveToNext();
+        Travel travel = this.mapCursor(cursor);
+        cursor.close();
+        return travel;
+    }
+
+    private Travel mapCursor(Cursor cursor) {
         Travel travel = new Travel();
         travel.setId(cursor.getLong(0));
         travel.setTitle(cursor.getString(1));
-        travel.setMemo(cursor.getString(2));
-//        System.out.println("created At: " + cursor.getString(3));
-//        travel.setCreatedAt(cursor.getString(3));
-//        travel.setUpdatedAt(cursor.getString(4));
-
-        System.out.println(travel);
+        travel.setPlace(cursor.getString(2));
+        travel.setMemo(cursor.getString(3));
+        travel.setExpenseNote(cursor.getString(4));
+        travel.setStartDate(DateUtils.parseDbDate(cursor.getString(5)));
+        travel.setCreatedAt(DateUtils.parseDbDatetime(cursor.getString(6)));
+        travel.setUpdatedAt(DateUtils.parseDbDatetime(cursor.getString(7)));
         return travel;
     }
 }
