@@ -2,12 +2,13 @@ package com.example.travel_plan.entities;
 
 import java.util.Date;
 
-public class Travel {
+public class Travel extends BaseEntity{
     private Long id;
     private String title;
-    private String content;
-    private Date createdAt;
-    private Date updatedAt;
+    private String travelPlace;
+    private String memo;
+    private String expenseNote;
+    private Date startDate;
 
     public Long getId() {
         return id;
@@ -25,40 +26,39 @@ public class Travel {
         this.title = title;
     }
 
-    public String getContent() {
-        return content;
+    public String getMemo() {
+        return memo;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setMemo(String memo) {
+        this.memo = memo;
     }
 
-    public Date getCreatedAt() {
-        return createdAt;
+    public String getExpenseNote() {
+        return expenseNote;
     }
 
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
+    public void setExpenseNote(String expenseNote) {
+        this.expenseNote = expenseNote;
     }
 
-    public Date getUpdatedAt() {
-        return updatedAt;
+    public Date getStartDate() {
+        return startDate;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
     }
 
-    public static Travel builder(){
-        return new Travel();
-    }
+
 
     @Override
     public String toString() {
         return "Travel{" +
                 "id=" + id +
                 ", title='" + title + '\'' +
-                ", content='" + content + '\'' +
+                ", content='" + memo + '\'' +
+                ", startDate=" + startDate +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';
@@ -67,14 +67,18 @@ public class Travel {
     public static final String TBL_NAME = "tbl_travel";
     public static final String ID_FIELD = "id";
     public static final String TITLE_FIELD = "title";
-    public static final String CONTENT_FIELD = "content";
-    public static final String CREATED_AT_FIELD = "createdAt";
-    public static final String UPDATED_AT_FIELD = "updatedAt";
+    public static final String MEMO_FIELD = "memo";
+    public static final String EXPENSE_NOTE_FIELD = "expenseNote";
+    public static final String START_DATE_AT_FIELD = "startDate";
+    public static final String END_DATE_AT_FIELD = "endDate";
 
     public static final String CREATE_TBL_SQL = "CREATE TABLE " + TBL_NAME + " ( " +
             ID_FIELD + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
             TITLE_FIELD + " TEXT," +
-            CONTENT_FIELD + " TEXT," +
+            MEMO_FIELD + " TEXT," +
+            EXPENSE_NOTE_FIELD + " TEXT," +
+            START_DATE_AT_FIELD + " TEXT," +
+            END_DATE_AT_FIELD + " TEXT," +
             CREATED_AT_FIELD + " TEXT," +
             UPDATED_AT_FIELD + " TEXT" +
             ");";
