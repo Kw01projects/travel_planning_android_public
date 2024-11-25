@@ -1,0 +1,248 @@
+package com.example.travel_plan;
+
+import android.app.DatePickerDialog;
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.PopupMenu;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
+
+public class HomeActivity extends AppCompatActivity {
+
+    private GridView calendarGrid;
+    private Calendar calendar;
+    private TextView currentMonth;
+    private TextView travelScheduleDates;
+    private boolean isStartDateSelected = true;
+    private String startDate = "0000.00.00"; // 기본 시작 날짜
+    private String endDate = "0000.00.00"; // 기본 종료 날짜
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_home);
+
+        calendarGrid = findViewById(R.id.calendar_grid);
+        currentMonth = findViewById(R.id.current_month);
+        travelScheduleDates = findViewById(R.id.travel_schedule_dates); // TextView 초기화
+        calendar = Calendar.getInstance();
+
+        setupCalendar();
+
+        ImageView prevMonthButton = findViewById(R.id.prev_month_button);
+        prevMonthButton.setOnClickListener(v -> {
+            calendar.add(Calendar.MONTH, -1);
+            updateCalendar();
+        });
+
+        ImageView nextMonthButton = findViewById(R.id.next_month_button);
+        nextMonthButton.setOnClickListener(v -> {
+            calendar.add(Calendar.MONTH, 1);
+            updateCalendar();
+        });
+
+        // 프로필 이미지 클릭 이벤트
+        ImageView profileImage = findViewById(R.id.profile_image);
+        profileImage.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, MyPageActivity.class);
+            startActivity(intent);
+        });
+
+        // 메뉴 버튼 클릭 이벤트
+        ImageView menuButton = findViewById(R.id.menu_button);
+        menuButton.setOnClickListener(v -> showPopupMenu(menuButton));
+
+        // 여행 일정 날짜 선택 이벤트
+        travelScheduleDates.setOnClickListener(v -> {
+            if (isStartDateSelected) {
+                showDatePickerDialog(true); // 시작 날짜 선택
+            } else {
+                showDatePickerDialog(false); // 종료 날짜 선택
+            }
+        });
+
+        // 달력 날짜 클릭 이벤트
+        calendarGrid.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedDate = getFormattedDate(position);
+            if (!selectedDate.isEmpty()) {
+                Intent intent = new Intent(HomeActivity.this, TodayScheduleActivity.class);
+                intent.putExtra("selectedDate", selectedDate);
+                startActivity(intent);
+            }
+        });
+    }
+
+    private void setupCalendar() {
+        updateCalendar();
+    }
+
+    private void updateCalendar() {
+        List<String> dates = new ArrayList<>();
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+
+        int firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+        for (int i = 0; i < firstDayOfWeek; i++) {
+            dates.add("");
+        }
+
+        int daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+        for (int i = 1; i <= daysInMonth; i++) {
+            dates.add(String.valueOf(i));
+        }
+
+        CalendarAdapter adapter = new CalendarAdapter(dates);
+        calendarGrid.setAdapter(adapter);
+
+        // 현재 월 텍스트 업데이트
+        SimpleDateFormat monthFormat = new SimpleDateFormat("yyyy MMMM", Locale.getDefault());
+        currentMonth.setText(monthFormat.format(calendar.getTime()));
+    }
+
+    private String getFormattedDate(int position) {
+        Calendar tempCalendar = (Calendar) calendar.clone();
+        tempCalendar.set(Calendar.DAY_OF_MONTH, 1);
+        tempCalendar.add(Calendar.DAY_OF_MONTH, position - tempCalendar.get(Calendar.DAY_OF_WEEK) + 1);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd", Locale.getDefault());
+        return dateFormat.format(tempCalendar.getTime());
+    }
+
+    private void showPopupMenu(View anchorView) {
+        PopupMenu popupMenu = new PopupMenu(this, anchorView);
+        MenuInflater inflater = popupMenu.getMenuInflater();
+        inflater.inflate(R.menu.menu_main, popupMenu.getMenu());
+
+        popupMenu.setOnMenuItemClickListener(menuItem -> handleMenuItemClick(menuItem));
+        popupMenu.show();
+    }
+
+    private boolean handleMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_today_schedule:
+                String todayDate = getTodayDate();
+                Intent intent = new Intent(HomeActivity.this, TodayScheduleActivity.class);
+                intent.putExtra("selectedDate", todayDate);
+                startActivity(intent);
+                return true;
+
+            case R.id.menu_all_schedules:
+                Intent weeklyIntent = new Intent(HomeActivity.this, WeeklyScheduleActivity.class);
+                startActivity(weeklyIntent);
+                return true;
+
+            case R.id.menu_view_map:
+                Toast.makeText(this, "지도 보기 클릭됨", Toast.LENGTH_SHORT).show();
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    private String getTodayDate() {
+        Calendar today = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd", Locale.getDefault());
+        return dateFormat.format(today.getTime());
+    }
+
+    private void showDatePickerDialog(boolean isStartDate) {
+        Calendar tempCalendar = Calendar.getInstance();
+        int year = tempCalendar.get(Calendar.YEAR);
+        int month = tempCalendar.get(Calendar.MONTH);
+        int day = tempCalendar.get(Calendar.DAY_OF_MONTH);
+
+        new DatePickerDialog(this, (view, selectedYear, selectedMonth, selectedDay) -> {
+            String selectedDate = selectedYear + "." + (selectedMonth + 1) + "." + selectedDay;
+
+            if (isStartDate) {
+                startDate = selectedDate;
+                isStartDateSelected = false; // 다음은 종료 날짜 선택
+            } else {
+                endDate = selectedDate;
+                isStartDateSelected = true; // 다시 시작 날짜로 변경
+            }
+
+            // 업데이트된 날짜를 TextView에 표시
+            travelScheduleDates.setText(startDate + " - " + endDate);
+        }, year, month, day).show();
+    }
+
+    private class CalendarAdapter extends BaseAdapter {
+        private final List<String> dates;
+        private final Calendar today;
+
+        public CalendarAdapter(List<String> dates) {
+            this.dates = dates;
+            this.today = Calendar.getInstance();
+        }
+
+        @Override
+        public int getCount() {
+            return dates.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return dates.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            TextView textView;
+            if (convertView == null) {
+                textView = new TextView(HomeActivity.this);
+                textView.setLayoutParams(new GridView.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                ));
+                textView.setGravity(View.TEXT_ALIGNMENT_CENTER);
+                textView.setPadding(8, 8, 8, 8);
+                textView.setTextSize(16);
+            } else {
+                textView = (TextView) convertView;
+            }
+
+            String date = dates.get(position);
+            textView.setText(date);
+
+            if (!date.isEmpty()) {
+                int day = Integer.parseInt(date);
+                if (day == today.get(Calendar.DAY_OF_MONTH)
+                        && calendar.get(Calendar.MONTH) == today.get(Calendar.MONTH)
+                        && calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR)) {
+                    textView.setBackgroundColor(Color.LTGRAY);
+                    textView.setTextColor(Color.BLACK);
+                } else {
+                    textView.setBackgroundColor(Color.TRANSPARENT);
+                    textView.setTextColor(Color.DKGRAY);
+                }
+            } else {
+                textView.setBackgroundColor(Color.TRANSPARENT);
+                textView.setText("");
+            }
+
+            return textView;
+        }
+    }
+}

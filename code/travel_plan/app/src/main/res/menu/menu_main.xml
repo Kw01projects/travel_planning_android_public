@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_today_schedule"
+        android:title="오늘 일정 보기" />
+    <item
+        android:id="@+id/menu_all_schedules"
+        android:title="전체 일정 보기" />
+    <item
+        android:id="@+id/menu_view_map"
+        android:title="지도 보기" />
+</menu>
