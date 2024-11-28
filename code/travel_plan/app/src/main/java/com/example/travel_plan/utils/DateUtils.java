@@ -1,6 +1,7 @@
 package com.example.travel_plan.utils;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -44,6 +45,22 @@ public class DateUtils {
 
     public static String formatReadableDate(Date date) {
         return getDatetimeFormatter(false, "yyyy.MM.dd").format(date).substring(0, 10);
+    }
+
+
+    public static Date getWeekStartDate() {
+        Calendar calendar = Calendar.getInstance();
+        while (calendar.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY)
+            calendar.add(Calendar.DATE, -1);
+        return calendar.getTime();
+    }
+
+    public static Date getWeekEndDate() {
+        Calendar calendar = Calendar.getInstance();
+        while (calendar.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY)
+            calendar.add(Calendar.DATE, 1);
+        calendar.add(Calendar.DATE, -1);
+        return calendar.getTime();
     }
 
 }

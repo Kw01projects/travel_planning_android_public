@@ -20,7 +20,7 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <activity android:name=".screens.TodayScheduleActivity" />
+        <activity android:name=".screens.schedule.TodayScheduleActivity" />
         <activity
             android:name=".screens.MyPageActivity"
             android:exported="false">

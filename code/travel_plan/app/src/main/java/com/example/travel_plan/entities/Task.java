@@ -77,6 +77,10 @@ public class Task extends BaseEntity {
         this.endTime = endTime;
     }
 
+    public int getStartHour(){
+        return Integer.parseInt(this.startTime.substring(0, 2));
+    }
+
     @Override
     public String toString() {
         return "Task{" +

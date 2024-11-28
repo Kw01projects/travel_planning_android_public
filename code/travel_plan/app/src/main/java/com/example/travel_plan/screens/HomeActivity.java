@@ -22,6 +22,7 @@ import com.example.travel_plan.R;
 import com.example.travel_plan.entities.User;
 import com.example.travel_plan.repositories.RepositoryFactory;
 import com.example.travel_plan.repositories.UserRepository;
+import com.example.travel_plan.screens.schedule.TodayScheduleActivity;
 import com.example.travel_plan.utils.DateUtils;
 import com.example.travel_plan.viewModels.UserViewModel;
 
@@ -166,6 +167,7 @@ public class HomeActivity extends AppCompatActivity {
                 String todayDate = getTodayDate();
                 Intent intent = new Intent(HomeActivity.this, TodayScheduleActivity.class);
                 intent.putExtra("selectedDate", todayDate);
+                intent.putExtra("isDetailPage", true);
                 startActivity(intent);
                 return true;
 

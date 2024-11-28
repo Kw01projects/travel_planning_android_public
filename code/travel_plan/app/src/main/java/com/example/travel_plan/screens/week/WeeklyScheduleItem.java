@@ -1,4 +1,4 @@
-package com.example.travel_plan.screens;
+package com.example.travel_plan.screens.week;
 
 public class WeeklyScheduleItem {
     private int day; // 0 = Sunday, 6 = Saturday
@@ -15,8 +15,16 @@ public class WeeklyScheduleItem {
         return day;
     }
 
+    public void setDay(int day) {
+        this.day = day;
+    }
+
     public int getHour() {
         return hour;
+    }
+
+    public void setHour(int hour) {
+        this.hour = hour;
     }
 
     public String getTask() {

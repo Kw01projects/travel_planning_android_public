@@ -1,4 +1,4 @@
-package com.example.travel_plan.screens;
+package com.example.travel_plan.screens.schedule;
 
 import android.app.TimePickerDialog;
 import android.os.Bundle;
@@ -38,6 +38,7 @@ public class TodayScheduleActivity extends AppCompatActivity {
     private Button closeBtn;
     private Button saveBtn;
     private TaskRepository taskRepository;
+    private boolean isDetailPage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +74,10 @@ public class TodayScheduleActivity extends AppCompatActivity {
 
         // 일정 추가 버튼 이벤트
         addScheduleButton.setOnClickListener(v -> addSchedule());
+
+        isDetailPage = getIntent().getBooleanExtra("isDetailPage", false);
+        if (isDetailPage) saveBtn.setText("저장");
+        else saveBtn.setText("등록");
 
         closeBtn.setOnClickListener(v -> this.finish());
         saveBtn.setOnClickListener(v -> {
@@ -110,10 +115,10 @@ public class TodayScheduleActivity extends AppCompatActivity {
                 selectedEndTime = String.format("%02d:%02d", endHour, endMinute);
                 Toast.makeText(this, "시간 설정: " + selectedStartTime + " - " + selectedEndTime, Toast.LENGTH_SHORT).show();
                 timePickerButton.setText(selectedStartTime + "-" + selectedEndTime);
-            }, 12, 0, true);
+            }, 24, 0, true);
             endTimePicker.setTitle("종료 시간 선택");
             endTimePicker.show();
-        }, 12, 0, true);
+        }, 24, 0, true);
         startTimePicker.setTitle("시작 시간 선택");
         startTimePicker.show();
     }
