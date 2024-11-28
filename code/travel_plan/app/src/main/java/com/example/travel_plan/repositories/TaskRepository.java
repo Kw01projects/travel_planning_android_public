@@ -44,6 +44,7 @@ public class TaskRepository extends SQLiteOpenHelper {
         task.setHasDone(cursor.getInt(2) != 0);
         task.setStartDate(DateUtils.parseDbDate(cursor.getString(3)));
         task.setStartTime(cursor.getString(4));
+        task.setEndTime(cursor.getString(5));
         return task;
     }
 

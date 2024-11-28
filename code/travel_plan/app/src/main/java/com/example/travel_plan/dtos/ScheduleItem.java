@@ -36,10 +36,10 @@ public class ScheduleItem {
     public String getTask() { return task; }
     public void setTask(String task) { this.task = task; }
 
-    public String getStartTime() { return startTime; }
+    public String getStartTime() { return taskInstance.getStartTime(); }
     public void setStartTime(String startTime) { this.startTime = startTime; }
 
-    public String getEndTime() { return endTime; }
+    public String getEndTime() { return taskInstance.getEndTime(); }
     public void setEndTime(String endTime) { this.endTime = endTime; }
 
     public boolean isCompleted() { return isCompleted; }

@@ -1,6 +1,7 @@
 package com.example.travel_plan.screens.schedule;
 
 import android.app.TimePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,6 +18,7 @@ import com.example.travel_plan.entities.Task;
 import com.example.travel_plan.entities.Travel;
 import com.example.travel_plan.repositories.RepositoryFactory;
 import com.example.travel_plan.repositories.TaskRepository;
+import com.example.travel_plan.screens.HomeActivity;
 import com.example.travel_plan.utils.DateUtils;
 
 import java.util.ArrayList;
@@ -89,6 +91,7 @@ public class TodayScheduleActivity extends AppCompatActivity {
                 Travel travel = new Travel();
                 travel.setStartDate(parsedSelectedDate);
                 RepositoryFactory.getTravelRepository(this).save(travel);
+                setResult(0, null);
                 this.finish();
             }
         });
@@ -99,7 +102,6 @@ public class TodayScheduleActivity extends AppCompatActivity {
     private void showMyTaskList() {
         List<Task> tasks = taskRepository.getTaskListByDate(parsedSelectedDate);
 
-        System.out.println("my task list size: " + tasks.size());
         for (Task t : tasks)
             scheduleList.add(new ScheduleItem(t));
         Travel travel = RepositoryFactory.getTravelRepository(this).findByDate(parsedSelectedDate);

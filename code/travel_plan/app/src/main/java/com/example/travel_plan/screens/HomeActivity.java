@@ -15,12 +15,15 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.travel_plan.R;
+import com.example.travel_plan.entities.Travel;
 import com.example.travel_plan.entities.User;
 import com.example.travel_plan.repositories.RepositoryFactory;
+import com.example.travel_plan.repositories.TravelRepository;
 import com.example.travel_plan.repositories.UserRepository;
 import com.example.travel_plan.screens.schedule.TodayScheduleActivity;
 import com.example.travel_plan.utils.DateUtils;
@@ -43,9 +46,11 @@ public class HomeActivity extends AppCompatActivity {
     private TextView travelScheduleEndDate;
     private String startDate = "0000.00.00"; // 기본 시작 날짜
     private String endDate = "0000.00.00"; // 기본 종료 날짜
+    private CalendarAdapter calendarAdapter;
 
     private UserRepository userRepository;
     private User myInfo;
+    private static String currentMonthYear;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,12 +140,19 @@ public class HomeActivity extends AppCompatActivity {
             dates.add(String.valueOf(i));
         }
 
-        CalendarAdapter adapter = new CalendarAdapter(dates);
-        calendarGrid.setAdapter(adapter);
+        this.currentMonthYear = String.valueOf(calendar.get(Calendar.YEAR)).concat("-") + (calendar.get(Calendar.MONTH) + 1);
+        calendarAdapter = new CalendarAdapter(dates);
+        calendarGrid.setAdapter(calendarAdapter);
 
         // 현재 월 텍스트 업데이트
         SimpleDateFormat monthFormat = new SimpleDateFormat("yyyy MMMM", Locale.getDefault());
         currentMonth.setText(monthFormat.format(calendar.getTime()));
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        calendarAdapter.notifyDataSetChanged();
     }
 
     private String getFormattedDate(int position) {
@@ -168,7 +180,7 @@ public class HomeActivity extends AppCompatActivity {
                 Intent intent = new Intent(HomeActivity.this, TodayScheduleActivity.class);
                 intent.putExtra("selectedDate", todayDate);
                 intent.putExtra("isDetailPage", true);
-                startActivity(intent);
+                startActivityForResult(intent, 0);
                 return true;
 
             case R.id.menu_all_schedules:
@@ -218,10 +230,12 @@ public class HomeActivity extends AppCompatActivity {
     private class CalendarAdapter extends BaseAdapter {
         private final List<String> dates;
         private final Calendar today;
+        private final TravelRepository travelRepository;
 
         public CalendarAdapter(List<String> dates) {
             this.dates = dates;
             this.today = Calendar.getInstance();
+            travelRepository = RepositoryFactory.getTravelRepository(getApplicationContext());
         }
 
         @Override
@@ -269,6 +283,9 @@ public class HomeActivity extends AppCompatActivity {
                     textView.setBackgroundColor(Color.TRANSPARENT);
                     textView.setTextColor(Color.DKGRAY);
                 }
+
+                if (travelRepository.findByDate(DateUtils.parseDbDate(currentMonthYear + "-" + date)) != null)
+                    textView.setBackgroundColor(Color.CYAN);
             } else {
                 textView.setBackgroundColor(Color.TRANSPARENT);
                 textView.setText("");
