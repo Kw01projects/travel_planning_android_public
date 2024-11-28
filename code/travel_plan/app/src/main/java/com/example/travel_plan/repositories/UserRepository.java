@@ -18,6 +18,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class UserRepository extends SQLiteOpenHelper {
+
     public UserRepository(@Nullable Context context) {
         super(context, SQLiteConfig.DB_NAME, null, SQLiteConfig.DB_VERSION);
 
@@ -46,14 +47,18 @@ public class UserRepository extends SQLiteOpenHelper {
         if (cursor.getCount() == 0) {
             User newUser = new User();
             newUser.setNickName("");
-            this.save(newUser);
+            cursor.close();
+            return newUser;
         }
         cursor.moveToNext();
         User user = new User();
+        user.setId(cursor.getLong(0));
         user.setNickName(cursor.getString(1));
+        user.setStartDate(DateUtils.parseDbDate(cursor.getString(2)));
+        user.setEndDate(DateUtils.parseDbDate(cursor.getString(3)));
         try {
-            user.setCreatedAt(DateUtils.parseDbDatetime(cursor.getString(2)));
-            user.setUpdatedAt(DateUtils.parseDbDatetime(cursor.getString(3)));
+            user.setCreatedAt(DateUtils.parseDbDatetime(cursor.getString(4)));
+            user.setUpdatedAt(DateUtils.parseDbDatetime(cursor.getString(5)));
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -67,16 +72,20 @@ public class UserRepository extends SQLiteOpenHelper {
         ContentValues contentValues = new ContentValues();
         contentValues.put(User.ID_FIELD, 1L);
         contentValues.put(User.NICKNAME_FIELD, user.getNickName());
-        contentValues.put(BaseEntity.CREATED_AT_FIELD, DateUtils.formatDbDatetime(currentDate));
         contentValues.put(BaseEntity.UPDATED_AT_FIELD, DateUtils.formatDbDatetime(currentDate));
-
+        if (user.getStartDate() != null && user.getEndDate() != null) {
+            contentValues.put(User.START_DATE_FIELD, DateUtils.formatDbDate(user.getStartDate()));
+            contentValues.put(User.END_DATE_FIELD, DateUtils.formatDbDate(user.getEndDate()));
+        }
         User userCheck = this.getMyInfo();
-        if (userCheck != null) {
+        if (userCheck != null && userCheck.getId() != null) {
             String[] whereArgs = {"1"};
-            db.update(User.TBL_NAME, contentValues, "", whereArgs);
+            db.update(User.TBL_NAME, contentValues, User.ID_FIELD + " = ?", whereArgs);
             user.setUpdatedAt(currentDate);
-        } else
+        } else {
+            contentValues.put(BaseEntity.CREATED_AT_FIELD, DateUtils.formatDbDatetime(currentDate));
             user.setId(db.insert(User.TBL_NAME, null, contentValues));
-        return user;
+        }
+        return this.getMyInfo();
     }
 }

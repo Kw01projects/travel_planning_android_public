@@ -8,6 +8,7 @@ public class Task extends BaseEntity {
     private Boolean hasDone;
     private Date startDate;
     private String startTime;
+    private String endTime;
 
     public static final String TBL_NAME = "tbl_tasks";
     public static final String ID_FIELD = "id";
@@ -15,6 +16,7 @@ public class Task extends BaseEntity {
     public static final String HAS_DONE_FIELD = "hasDone";
     public static final String START_DATE_AT_FIELD = "startDate";
     public static final String START_TIME_AT_FIELD = "startTime";
+    public static final String END_TIME_AT_FIELD = "endTime";
 
     public static final String CREATE_TBL_SQL = "CREATE TABLE " + TBL_NAME + " (" +
             ID_FIELD + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
@@ -22,6 +24,7 @@ public class Task extends BaseEntity {
             HAS_DONE_FIELD + " INTEGER DEFAULT FALSE," +
             START_DATE_AT_FIELD + " TEXT," +
             START_TIME_AT_FIELD + " TEXT," +
+            END_TIME_AT_FIELD + " TEXT," +
             CREATED_AT_FIELD + " TEXT," +
             UPDATED_AT_FIELD + " TEXT" +
             ")";
@@ -64,6 +67,14 @@ public class Task extends BaseEntity {
 
     public void setStartTime(String startTime) {
         this.startTime = startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
     }
 
     @Override

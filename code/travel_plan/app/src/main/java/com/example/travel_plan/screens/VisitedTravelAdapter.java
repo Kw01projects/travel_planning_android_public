@@ -1,4 +1,4 @@
-package com.example.travel_plan;
+package com.example.travel_plan.screens;
 
 import android.view.LayoutInflater;
 import android.view.View;

@@ -1,4 +1,4 @@
-package com.example.travel_plan;
+package com.example.travel_plan.screens;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
@@ -16,10 +16,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.example.travel_plan.R;
+import com.example.travel_plan.entities.User;
+import com.example.travel_plan.repositories.RepositoryFactory;
+import com.example.travel_plan.repositories.UserRepository;
+import com.example.travel_plan.utils.DateUtils;
+import com.example.travel_plan.viewModels.UserViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -27,11 +36,15 @@ public class HomeActivity extends AppCompatActivity {
 
     private GridView calendarGrid;
     private Calendar calendar;
+    private TextView userNickname;
     private TextView currentMonth;
-    private TextView travelScheduleDates;
-    private boolean isStartDateSelected = true;
+    private TextView travelScheduleStartDate;
+    private TextView travelScheduleEndDate;
     private String startDate = "0000.00.00"; // 기본 시작 날짜
     private String endDate = "0000.00.00"; // 기본 종료 날짜
+
+    private UserRepository userRepository;
+    private User myInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +53,8 @@ public class HomeActivity extends AppCompatActivity {
 
         calendarGrid = findViewById(R.id.calendar_grid);
         currentMonth = findViewById(R.id.current_month);
-        travelScheduleDates = findViewById(R.id.travel_schedule_dates); // TextView 초기화
+        travelScheduleStartDate = findViewById(R.id.travel_schedule_start); // TextView 초기화
+        travelScheduleEndDate = findViewById(R.id.travel_schedule_end); // TextView 초기화
         calendar = Calendar.getInstance();
 
         setupCalendar();
@@ -69,13 +83,8 @@ public class HomeActivity extends AppCompatActivity {
         menuButton.setOnClickListener(v -> showPopupMenu(menuButton));
 
         // 여행 일정 날짜 선택 이벤트
-        travelScheduleDates.setOnClickListener(v -> {
-            if (isStartDateSelected) {
-                showDatePickerDialog(true); // 시작 날짜 선택
-            } else {
-                showDatePickerDialog(false); // 종료 날짜 선택
-            }
-        });
+        travelScheduleStartDate.setOnClickListener(v -> showDatePickerDialog(true));
+        travelScheduleEndDate.setOnClickListener(v -> showDatePickerDialog(false));
 
         // 달력 날짜 클릭 이벤트
         calendarGrid.setOnItemClickListener((parent, view, position, id) -> {
@@ -86,6 +95,25 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        // auto update user's nickname - need test later
+        userRepository = RepositoryFactory.getUserRepository(this);
+        userNickname = findViewById(R.id.userNickname);
+
+        myInfo = userRepository.getMyInfo();
+        if (myInfo.getStartDate() != null && myInfo.getEndDate() != null) {
+            travelScheduleStartDate.setText(DateUtils.formatReadableDate(myInfo.getStartDate()));
+            travelScheduleEndDate.setText(DateUtils.formatReadableDate(myInfo.getEndDate()));
+        }
+
+        UserViewModel userViewModel = (new ViewModelProvider(this).get(UserViewModel.class));
+        userNickname.setText("Hi, ".concat(myInfo.getNickName()));
+        userViewModel
+                .getUser()
+                .observe(this, userState -> {
+                    System.out.println("user changed: ");
+                    userNickname.setText(userState.getNickName());
+                });
     }
 
     private void setupCalendar() {
@@ -161,7 +189,7 @@ public class HomeActivity extends AppCompatActivity {
         return dateFormat.format(today.getTime());
     }
 
-    private void showDatePickerDialog(boolean isStartDate) {
+    private void showDatePickerDialog(boolean isSelectedStartDate) {
         Calendar tempCalendar = Calendar.getInstance();
         int year = tempCalendar.get(Calendar.YEAR);
         int month = tempCalendar.get(Calendar.MONTH);
@@ -169,17 +197,19 @@ public class HomeActivity extends AppCompatActivity {
 
         new DatePickerDialog(this, (view, selectedYear, selectedMonth, selectedDay) -> {
             String selectedDate = selectedYear + "." + (selectedMonth + 1) + "." + selectedDay;
+            Date parsedDate = DateUtils.parseDbDate(selectedYear + "-" + (selectedMonth + 1) + "-" + selectedDay);
 
-            if (isStartDate) {
+            if (isSelectedStartDate) {
                 startDate = selectedDate;
-                isStartDateSelected = false; // 다음은 종료 날짜 선택
+                myInfo.setStartDate(parsedDate);
+                travelScheduleStartDate.setText(startDate); // 업데이트된 날짜를 TextView에 표시
             } else {
                 endDate = selectedDate;
-                isStartDateSelected = true; // 다시 시작 날짜로 변경
+                myInfo.setEndDate(parsedDate);
+                travelScheduleEndDate.setText(endDate); // 업데이트된 날짜를 TextView에 표시
             }
-
-            // 업데이트된 날짜를 TextView에 표시
-            travelScheduleDates.setText(startDate + " - " + endDate);
+            if (myInfo.getStartDate() != null && myInfo.getEndDate() != null)
+                myInfo = userRepository.save(myInfo);
         }, year, month, day).show();
     }
 

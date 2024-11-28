@@ -21,12 +21,14 @@ public class TravelRepository extends SQLiteOpenHelper {
 
     public TravelRepository(@Nullable Context context) {
         super(context, SQLiteConfig.DB_NAME, null, SQLiteConfig.DB_VERSION);
+//        this.getWritableDatabase().execSQL(Travel.CREATE_TBL_SQL);
+//        this.getWritableDatabase().execSQL("DROP TABLE IF EXISTS " + Travel.TBL_NAME + ";");
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         try {
-            //        db.execSQL("DROP TABLE IF EXISTS " + Travel.TBL_NAME + ";");
+//            db.execSQL("DROP TABLE IF EXISTS " + Travel.TBL_NAME + ";");
             db.execSQL(Travel.CREATE_TBL_SQL);
         } catch (Exception ex) {
         }
@@ -40,6 +42,8 @@ public class TravelRepository extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         Date currentDate = Calendar.getInstance().getTime();
 
+        Travel checkTravel = this.findByDate(travel.getStartDate());
+        if (checkTravel != null) travel = checkTravel;
         ContentValues contentValues = new ContentValues();
         contentValues.put(Travel.TITLE_FIELD, travel.getTitle());
         contentValues.put(Travel.PLACE_FIELD, travel.getPlace());
@@ -99,8 +103,8 @@ public class TravelRepository extends SQLiteOpenHelper {
         travel.setMemo(cursor.getString(3));
         travel.setExpenseNote(cursor.getString(4));
         travel.setStartDate(DateUtils.parseDbDate(cursor.getString(5)));
-        travel.setCreatedAt(DateUtils.parseDbDatetime(cursor.getString(6)));
-        travel.setUpdatedAt(DateUtils.parseDbDatetime(cursor.getString(7)));
+//        travel.setCreatedAt(DateUtils.parseDbDatetime(cursor.getString(6)));
+//        travel.setUpdatedAt(DateUtils.parseDbDatetime(cursor.getString(7)));
         return travel;
     }
 }

@@ -1,4 +1,4 @@
-package com.example.travel_plan;
+package com.example.travel_plan.screens;
 
 public class WeeklyScheduleItem {
     private int day; // 0 = Sunday, 6 = Saturday

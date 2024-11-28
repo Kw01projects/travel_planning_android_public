@@ -1,4 +1,4 @@
-package com.example.travel_plan;
+package com.example.travel_plan.screens;
 
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -11,6 +11,11 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.travel_plan.R;
+import com.example.travel_plan.entities.User;
+import com.example.travel_plan.repositories.RepositoryFactory;
+import com.example.travel_plan.repositories.UserRepository;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -35,6 +40,8 @@ public class MyPageActivity extends AppCompatActivity {
     private List<String> travelList, incomeList, expenseList;
     private Calendar calendar;
     private VisitedTravelAdapter travelAdapter;
+    private UserRepository userRepository;
+    private User myInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,6 +153,10 @@ public class MyPageActivity extends AppCompatActivity {
 
         // 현재 날짜 초기화
         updateDate();
+
+        userRepository = RepositoryFactory.getUserRepository(this);
+        myInfo = userRepository.getMyInfo();
+        ((TextView) findViewById(R.id.nickname_text)).setText(myInfo.getNickName());
     }
 
     // 현재 날짜 업데이트

@@ -1,4 +1,4 @@
-package com.example.travel_plan;
+package com.example.travel_plan.screens;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +8,9 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.travel_plan.R;
+import com.example.travel_plan.dtos.ScheduleItem;
 
 import java.util.List;
 

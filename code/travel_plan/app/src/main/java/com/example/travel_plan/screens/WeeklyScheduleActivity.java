@@ -1,4 +1,4 @@
-package com.example.travel_plan;
+package com.example.travel_plan.screens;
 
 import android.os.Bundle;
 
@@ -7,6 +7,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import android.graphics.drawable.ColorDrawable;
+
+import com.example.travel_plan.R;
 
 import java.util.ArrayList;
 import java.util.List;

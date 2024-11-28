@@ -27,7 +27,7 @@ public class TaskRepository extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         try {
-            db.execSQL("DROP TABLE IF EXISTS " + Task.TBL_NAME + ";");
+//            db.execSQL("DROP TABLE IF EXISTS " + Task.TBL_NAME + ";");
             db.execSQL(Task.CREATE_TBL_SQL);
         } catch (Exception ex) {
         }
@@ -95,6 +95,7 @@ public class TaskRepository extends SQLiteOpenHelper {
         contentValues.put(Task.HAS_DONE_FIELD, task.getHasDone());
         contentValues.put(Task.START_DATE_AT_FIELD, DateUtils.formatDbDate(task.getStartDate()));
         contentValues.put(Task.START_TIME_AT_FIELD, task.getStartTime());
+        contentValues.put(Task.END_TIME_AT_FIELD, task.getEndTime());
         contentValues.put(Task.UPDATED_AT_FIELD, DateUtils.formatDbDatetime(currentDate));
 
         if (task.getId() == null) {
