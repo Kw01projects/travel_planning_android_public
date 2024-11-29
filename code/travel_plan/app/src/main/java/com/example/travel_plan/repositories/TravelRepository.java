@@ -23,6 +23,7 @@ public class TravelRepository extends SQLiteOpenHelper {
         super(context, SQLiteConfig.DB_NAME, null, SQLiteConfig.DB_VERSION);
 //        this.getWritableDatabase().execSQL(Travel.CREATE_TBL_SQL);
 //        this.getWritableDatabase().execSQL("DROP TABLE IF EXISTS " + Travel.TBL_NAME + ";");
+        this.onCreate(this.getWritableDatabase());
     }
 
     @Override

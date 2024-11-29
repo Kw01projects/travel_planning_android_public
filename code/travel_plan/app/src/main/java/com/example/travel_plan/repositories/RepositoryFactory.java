@@ -8,12 +8,15 @@ public class RepositoryFactory {
     private static UserRepository userRepository;
     private static TravelRepository travelRepository;
     private static TaskRepository taskRepository;
+    private static PlaceRepository placeRepository;
 
-    public static void init(Context context){
+    public static void init(Context context) {
         getUserRepository(context);
         getTravelRepository(context);
         getTaskRepository(context);
+        getPlaceRepository(context);
     }
+
     public static UserRepository getUserRepository(Context context) {
         if (userRepository == null)
             userRepository = new UserRepository(context.getApplicationContext());
@@ -30,5 +33,11 @@ public class RepositoryFactory {
         if (taskRepository == null)
             taskRepository = new TaskRepository(context.getApplicationContext());
         return taskRepository;
+    }
+
+    public static PlaceRepository getPlaceRepository(Context context) {
+        if (placeRepository == null)
+            placeRepository = new PlaceRepository(context.getApplicationContext());
+        return placeRepository;
     }
 }

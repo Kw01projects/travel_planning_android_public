@@ -24,6 +24,8 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        System.out.println("Start first");
+
         RepositoryFactory.init(this);
         userRepository = RepositoryFactory.getUserRepository(this);
         myInfo = userRepository.getMyInfo();

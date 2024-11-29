@@ -13,7 +13,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.travel_plan.R;
+import com.example.travel_plan.entities.Place;
 import com.example.travel_plan.entities.User;
+import com.example.travel_plan.repositories.PlaceRepository;
 import com.example.travel_plan.repositories.RepositoryFactory;
 import com.example.travel_plan.repositories.UserRepository;
 
@@ -42,6 +44,7 @@ public class MyPageActivity extends AppCompatActivity {
     private VisitedTravelAdapter travelAdapter;
     private UserRepository userRepository;
     private User myInfo;
+    private PlaceRepository placeRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +75,8 @@ public class MyPageActivity extends AppCompatActivity {
 
         // 데이터 초기화
         travelList = new ArrayList<>();
+        placeRepository = RepositoryFactory.getPlaceRepository(this);
+        loadTravelList();
         incomeList = new ArrayList<>();
         expenseList = new ArrayList<>();
         calendar = Calendar.getInstance();
@@ -101,9 +106,14 @@ public class MyPageActivity extends AppCompatActivity {
         addTravelButton.setOnClickListener(v -> {
             String newTravel = travelInput.getText().toString().trim();
             if (!newTravel.isEmpty()) {
-                travelList.add(newTravel);
-                travelAdapter.notifyDataSetChanged();
-                travelInput.setText(""); // 입력 필드 초기화
+                try {
+                    placeRepository.save(new Place(newTravel));
+                    travelList.add(newTravel);
+                    travelAdapter.notifyDataSetChanged();
+                    travelInput.setText(""); // 입력 필드 초기화
+                } catch (Exception ex) {
+                    Toast.makeText(this, "추가 실페되었습니다", Toast.LENGTH_SHORT).show();
+                }
             } else {
                 Toast.makeText(this, "여행지를 입력하세요", Toast.LENGTH_SHORT).show();
             }
@@ -157,6 +167,11 @@ public class MyPageActivity extends AppCompatActivity {
         userRepository = RepositoryFactory.getUserRepository(this);
         myInfo = userRepository.getMyInfo();
         ((TextView) findViewById(R.id.nickname_text)).setText(myInfo.getNickName());
+    }
+
+    private void loadTravelList(){
+        for(Place place : placeRepository.list())
+            travelList.add(place.getPlace());
     }
 
     // 현재 날짜 업데이트
