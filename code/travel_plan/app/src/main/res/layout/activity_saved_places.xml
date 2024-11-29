@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E3F2FD"> <!-- 연한 파란 배경 -->
+
+    <!-- 상단 제목 영역 -->
+    <TextView
+        android:id="@+id/title_saved_places"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#BBDEFB"
+        android:padding="16dp"
+        android:text="저장한 장소"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:gravity="center" />
+
+    <!-- 저장한 장소 리스트 -->
+    <ListView
+        android:id="@+id/saved_places_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/title_saved_places"
+        android:divider="@android:color/darker_gray"
+        android:dividerHeight="1dp"
+        android:padding="8dp"
+        android:background="@android:color/white" />
+</RelativeLayout>

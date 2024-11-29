@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_travel_list"
+        android:title="여행지 리스트" />
+
+    <item
+        android:id="@+id/action_saved_places"
+        android:title="저장한 장소" />
+</menu>

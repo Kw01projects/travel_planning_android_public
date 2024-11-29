@@ -20,11 +20,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.travel_plan.R;
-import com.example.travel_plan.entities.Travel;
 import com.example.travel_plan.entities.User;
 import com.example.travel_plan.repositories.RepositoryFactory;
 import com.example.travel_plan.repositories.TravelRepository;
 import com.example.travel_plan.repositories.UserRepository;
+import com.example.travel_plan.screens.map.MapsActivity;
 import com.example.travel_plan.screens.schedule.TodayScheduleActivity;
 import com.example.travel_plan.utils.DateUtils;
 import com.example.travel_plan.viewModels.UserViewModel;
@@ -44,8 +44,8 @@ public class HomeActivity extends AppCompatActivity {
     private TextView currentMonth;
     private TextView travelScheduleStartDate;
     private TextView travelScheduleEndDate;
-    private String startDate = "0000.00.00"; // 기본 시작 날짜
-    private String endDate = "0000.00.00"; // 기본 종료 날짜
+    private String startDate = null; // 여행 시작 날짜
+    private String endDate = null; // 여행 종료 날짜
     private CalendarAdapter calendarAdapter;
 
     private UserRepository userRepository;
@@ -59,8 +59,8 @@ public class HomeActivity extends AppCompatActivity {
 
         calendarGrid = findViewById(R.id.calendar_grid);
         currentMonth = findViewById(R.id.current_month);
-        travelScheduleStartDate = findViewById(R.id.travel_schedule_start); // TextView 초기화
-        travelScheduleEndDate = findViewById(R.id.travel_schedule_end); // TextView 초기화
+        travelScheduleStartDate = findViewById(R.id.travel_schedule_start);
+        travelScheduleEndDate = findViewById(R.id.travel_schedule_end);
         calendar = Calendar.getInstance();
 
         setupCalendar();
@@ -102,7 +102,7 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        // auto update user's nickname - need test later
+        // 사용자 닉네임 및 여행 일정 데이터 로드
         userRepository = RepositoryFactory.getUserRepository(this);
         userNickname = findViewById(R.id.userNickname);
 
@@ -110,6 +110,8 @@ public class HomeActivity extends AppCompatActivity {
         if (myInfo.getStartDate() != null && myInfo.getEndDate() != null) {
             travelScheduleStartDate.setText(DateUtils.formatReadableDate(myInfo.getStartDate()));
             travelScheduleEndDate.setText(DateUtils.formatReadableDate(myInfo.getEndDate()));
+            startDate = DateUtils.formatDbDate(myInfo.getStartDate());
+            endDate = DateUtils.formatDbDate(myInfo.getEndDate());
         }
 
         UserViewModel userViewModel = (new ViewModelProvider(this).get(UserViewModel.class));
@@ -149,21 +151,6 @@ public class HomeActivity extends AppCompatActivity {
         currentMonth.setText(monthFormat.format(calendar.getTime()));
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        calendarAdapter.notifyDataSetChanged();
-    }
-
-    private String getFormattedDate(int position) {
-        Calendar tempCalendar = (Calendar) calendar.clone();
-        tempCalendar.set(Calendar.DAY_OF_MONTH, 1);
-        tempCalendar.add(Calendar.DAY_OF_MONTH, position - tempCalendar.get(Calendar.DAY_OF_WEEK) + 1);
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd", Locale.getDefault());
-        return dateFormat.format(tempCalendar.getTime());
-    }
-
     private void showPopupMenu(View anchorView) {
         PopupMenu popupMenu = new PopupMenu(this, anchorView);
         MenuInflater inflater = popupMenu.getMenuInflater();
@@ -180,7 +167,7 @@ public class HomeActivity extends AppCompatActivity {
                 Intent intent = new Intent(HomeActivity.this, TodayScheduleActivity.class);
                 intent.putExtra("selectedDate", todayDate);
                 intent.putExtra("isDetailPage", true);
-                startActivityForResult(intent, 0);
+                startActivity(intent);
                 return true;
 
             case R.id.menu_all_schedules:
@@ -189,7 +176,8 @@ public class HomeActivity extends AppCompatActivity {
                 return true;
 
             case R.id.menu_view_map:
-                Toast.makeText(this, "지도 보기 클릭됨", Toast.LENGTH_SHORT).show();
+                Intent mapIntent = new Intent(HomeActivity.this, MapsActivity.class);
+                startActivity(mapIntent);
                 return true;
 
             default:
@@ -203,6 +191,15 @@ public class HomeActivity extends AppCompatActivity {
         return dateFormat.format(today.getTime());
     }
 
+    private String getFormattedDate(int position) {
+        Calendar tempCalendar = (Calendar) calendar.clone();
+        tempCalendar.set(Calendar.DAY_OF_MONTH, 1);
+        tempCalendar.add(Calendar.DAY_OF_MONTH, position - tempCalendar.get(Calendar.DAY_OF_WEEK) + 1);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd", Locale.getDefault());
+        return dateFormat.format(tempCalendar.getTime());
+    }
+
     private void showDatePickerDialog(boolean isSelectedStartDate) {
         Calendar tempCalendar = Calendar.getInstance();
         int year = tempCalendar.get(Calendar.YEAR);
@@ -211,31 +208,26 @@ public class HomeActivity extends AppCompatActivity {
 
         new DatePickerDialog(this, (view, selectedYear, selectedMonth, selectedDay) -> {
             String selectedDate = selectedYear + "." + (selectedMonth + 1) + "." + selectedDay;
-            Date parsedDate = DateUtils.parseDbDate(selectedYear + "-" + (selectedMonth + 1) + "-" + selectedDay);
 
             if (isSelectedStartDate) {
-                startDate = selectedDate;
-                myInfo.setStartDate(parsedDate);
-                travelScheduleStartDate.setText(startDate); // 업데이트된 날짜를 TextView에 표시
+                startDate = selectedYear + "-" + (selectedMonth + 1) + "-" + selectedDay;
+                travelScheduleStartDate.setText(selectedDate);
             } else {
-                endDate = selectedDate;
-                myInfo.setEndDate(parsedDate);
-                travelScheduleEndDate.setText(endDate); // 업데이트된 날짜를 TextView에 표시
+                endDate = selectedYear + "-" + (selectedMonth + 1) + "-" + selectedDay;
+                travelScheduleEndDate.setText(selectedDate);
             }
-            if (myInfo.getStartDate() != null && myInfo.getEndDate() != null)
-                myInfo = userRepository.save(myInfo);
+
+            calendarAdapter.notifyDataSetChanged(); // 선택된 날짜를 기반으로 UI 갱신
         }, year, month, day).show();
     }
 
     private class CalendarAdapter extends BaseAdapter {
         private final List<String> dates;
         private final Calendar today;
-        private final TravelRepository travelRepository;
 
         public CalendarAdapter(List<String> dates) {
             this.dates = dates;
             this.today = Calendar.getInstance();
-            travelRepository = RepositoryFactory.getTravelRepository(getApplicationContext());
         }
 
         @Override
@@ -274,24 +266,45 @@ public class HomeActivity extends AppCompatActivity {
 
             if (!date.isEmpty()) {
                 int day = Integer.parseInt(date);
+
+                // 오늘 날짜 색상
                 if (day == today.get(Calendar.DAY_OF_MONTH)
                         && calendar.get(Calendar.MONTH) == today.get(Calendar.MONTH)
                         && calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR)) {
-                    textView.setBackgroundColor(Color.LTGRAY);
-                    textView.setTextColor(Color.BLACK);
+                    textView.setBackgroundColor(Color.GRAY);
+                    textView.setTextColor(Color.WHITE);
                 } else {
                     textView.setBackgroundColor(Color.TRANSPARENT);
                     textView.setTextColor(Color.DKGRAY);
                 }
 
-                if (travelRepository.findByDate(DateUtils.parseDbDate(currentMonthYear + "-" + date)) != null)
-                    textView.setBackgroundColor(Color.CYAN);
+                // 여행 일정 날짜를 파란색으로 표시
+                if (isTravelDate(day)) {
+                    textView.setBackgroundColor(Color.BLUE);
+                    textView.setTextColor(Color.WHITE);
+                }
             } else {
                 textView.setBackgroundColor(Color.TRANSPARENT);
                 textView.setText("");
             }
 
             return textView;
+        }
+
+        private boolean isTravelDate(int day) {
+            try {
+                if (startDate == null || endDate == null) return false;
+
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                Calendar date = Calendar.getInstance();
+                date.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), day);
+
+                Date start = sdf.parse(startDate);
+                Date end = sdf.parse(endDate);
+                return !date.getTime().before(start) && !date.getTime().after(end);
+            } catch (Exception e) {
+                return false;
+            }
         }
     }
 }
