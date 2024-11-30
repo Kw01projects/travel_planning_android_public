@@ -10,6 +10,7 @@ public class RepositoryFactory {
     private static TaskRepository taskRepository;
     private static PlaceRepository placeRepository;
     private static MapPlaceRepository mapPlaceRepository;
+    private static MoneyLedgerRepository moneyLedgerRepository;
 
     public static void init(Context context) {
         getUserRepository(context);
@@ -17,6 +18,7 @@ public class RepositoryFactory {
         getTaskRepository(context);
         getPlaceRepository(context);
         getMapPlaceRepository(context);
+        getMoneyLedgerRepository(context);
     }
 
     public static UserRepository getUserRepository(Context context) {
@@ -47,5 +49,11 @@ public class RepositoryFactory {
         if (mapPlaceRepository == null)
             mapPlaceRepository = new MapPlaceRepository(context.getApplicationContext());
         return mapPlaceRepository;
+    }
+
+    public static MoneyLedgerRepository getMoneyLedgerRepository(Context context) {
+        if (moneyLedgerRepository == null)
+            moneyLedgerRepository = new MoneyLedgerRepository(context.getApplicationContext());
+        return moneyLedgerRepository;
     }
 }

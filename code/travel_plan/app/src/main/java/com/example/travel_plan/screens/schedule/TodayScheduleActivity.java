@@ -90,6 +90,7 @@ public class TodayScheduleActivity extends AppCompatActivity {
                     taskRepository.save(item.getTaskInstance());
                 Travel travel = new Travel();
                 travel.setStartDate(parsedSelectedDate);
+                travel.setMemo(memoInput.getText().toString());
                 RepositoryFactory.getTravelRepository(this).save(travel);
 //                Intent homeIntent = new Intent(this, HomeActivity.class);
 //                homeIntent.putExtra("position", getIntent().getIntExtra("position", -1));

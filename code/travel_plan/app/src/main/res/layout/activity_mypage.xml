@@ -219,13 +219,13 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:orientation="vertical"
                     android:layout_marginTop="8dp">
 
                     <!-- 항목 입력 -->
                     <EditText
                         android:id="@+id/income_item_input"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="3"
                         android:hint="항목"
@@ -234,7 +234,7 @@
                     <!-- 금액 입력 -->
                     <EditText
                         android:id="@+id/income_amount_input"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="2"
                         android:hint="금액"
@@ -282,13 +282,13 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:orientation="vertical"
                     android:layout_marginTop="8dp">
 
                     <!-- 항목 입력 -->
                     <EditText
                         android:id="@+id/expense_item_input"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="3"
                         android:hint="항목"
@@ -297,7 +297,7 @@
                     <!-- 금액 입력 -->
                     <EditText
                         android:id="@+id/expense_amount_input"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="2"
                         android:hint="금액"

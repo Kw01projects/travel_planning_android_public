@@ -5,7 +5,9 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,11 +16,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.travel_plan.R;
+import com.example.travel_plan.entities.MoneyLedger;
 import com.example.travel_plan.entities.Place;
 import com.example.travel_plan.entities.User;
+import com.example.travel_plan.repositories.MoneyLedgerRepository;
 import com.example.travel_plan.repositories.PlaceRepository;
 import com.example.travel_plan.repositories.RepositoryFactory;
 import com.example.travel_plan.repositories.UserRepository;
+import com.example.travel_plan.utils.DateUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -37,6 +42,7 @@ public class MyPageActivity extends AppCompatActivity {
     private TextView incomeText, expenseText, currentDateText;
 
     // 날짜 네비게이션 관련 UI
+    private HorizontalScrollView daysScrollContainer;
     private LinearLayout daysContainer;
     private LinearLayout dateNavigationLayout; // 날짜 네비게이션 전체 레이아웃
 
@@ -50,6 +56,7 @@ public class MyPageActivity extends AppCompatActivity {
     private UserRepository userRepository;
     private User myInfo;
     private PlaceRepository placeRepository;
+    private MoneyLedgerRepository moneyLedgerRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,15 +85,19 @@ public class MyPageActivity extends AppCompatActivity {
         currentDateText = findViewById(R.id.current_date_text);
         ledgerLayout = findViewById(R.id.ledger_layout);
         daysContainer = findViewById(R.id.days_container);
+        daysScrollContainer = findViewById(R.id.date_scroll_view);
         dateNavigationLayout = findViewById(R.id.date_navigation_layout); // 날짜 네비게이션 레이아웃
 
         // 데이터 초기화
         travelList = new ArrayList<>();
         placeRepository = RepositoryFactory.getPlaceRepository(this);
         loadTravelList();
+
+        moneyLedgerRepository = RepositoryFactory.getMoneyLedgerRepository(this);
         incomeList = new ArrayList<>();
         expenseList = new ArrayList<>();
         calendar = Calendar.getInstance();
+        loadMoneyLedger();
 
         // 어댑터 초기화
         travelAdapter = new VisitedTravelAdapter(travelList);
@@ -143,29 +154,47 @@ public class MyPageActivity extends AppCompatActivity {
 
         // 수입 추가 버튼 클릭 이벤트
         addIncomeButton.setOnClickListener(v -> {
-            String item = incomeItemInput.getText().toString().trim();
+            String title = incomeItemInput.getText().toString().trim();
             String amount = incomeAmountInput.getText().toString().trim();
-            if (TextUtils.isEmpty(item) || TextUtils.isEmpty(amount)) {
+            if (TextUtils.isEmpty(title) || TextUtils.isEmpty(amount)) {
                 Toast.makeText(this, "항목과 금액을 입력하세요.", Toast.LENGTH_SHORT).show();
             } else {
-                incomeList.add(item + ": " + amount + "원");
-                updateIncomeText();
-                incomeItemInput.setText("");
-                incomeAmountInput.setText("");
+                try {
+                    moneyLedgerRepository.save(new MoneyLedger(
+                            title, Long.parseLong(amount), DateUtils.formatDbDate(calendar.getTime()), "IN"
+                    ));
+                    incomeList.add(title + ": " + amount + "원");
+                    updateIncomeText();
+                    incomeItemInput.setText("");
+                    incomeAmountInput.setText("");
+                } catch (Exception exception) {
+                    Toast.makeText(this, "수입 추가가 실폐되었습니다.", Toast.LENGTH_SHORT).show();
+                    System.err.println("수입 추가 실폐");
+                    exception.printStackTrace();
+                }
             }
         });
 
         // 지출 추가 버튼 클릭 이벤트
         addExpenseButton.setOnClickListener(v -> {
-            String item = expenseItemInput.getText().toString().trim();
+            String title = expenseItemInput.getText().toString().trim();
             String amount = expenseAmountInput.getText().toString().trim();
-            if (TextUtils.isEmpty(item) || TextUtils.isEmpty(amount)) {
+            if (TextUtils.isEmpty(title) || TextUtils.isEmpty(amount)) {
                 Toast.makeText(this, "항목과 금액을 입력하세요.", Toast.LENGTH_SHORT).show();
             } else {
-                expenseList.add(item + ": " + amount + "원");
-                updateExpenseText();
-                expenseItemInput.setText("");
-                expenseAmountInput.setText("");
+                try {
+                    moneyLedgerRepository.save(new MoneyLedger(
+                            title, Long.parseLong(amount), DateUtils.formatDbDate(calendar.getTime()), "OUT"
+                    ));
+                    expenseList.add(title + ": " + amount + "원");
+                    updateExpenseText();
+                    expenseItemInput.setText("");
+                    expenseAmountInput.setText("");
+                } catch (Exception exception) {
+                    Toast.makeText(this, "지출 추가가 실폐되었습니다.", Toast.LENGTH_SHORT).show();
+                    System.err.println("지출 추가 실폐");
+                    exception.printStackTrace();
+                }
             }
         });
 
@@ -183,6 +212,16 @@ public class MyPageActivity extends AppCompatActivity {
             travelList.add(place.getPlace());
     }
 
+    private void loadMoneyLedger() {
+        for (MoneyLedger moneyLedger : moneyLedgerRepository.findByDateAndType(DateUtils.formatDbDate(calendar.getTime()), "IN"))
+            incomeList.add(moneyLedger.getTitle() + ": " + moneyLedger.getAmount() + "원");
+        for (MoneyLedger moneyLedger : moneyLedgerRepository.findByDateAndType(DateUtils.formatDbDate(calendar.getTime()), "OUT"))
+            expenseList.add(moneyLedger.getTitle() + ": " + moneyLedger.getAmount() + "원");
+
+        updateIncomeText();
+        updateIncomeText();
+    }
+
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density; // 화면 밀도 가져오기
         return Math.round(dp * density); // DP를 픽셀로 변환
@@ -195,7 +234,7 @@ public class MyPageActivity extends AppCompatActivity {
         Calendar tempCalendar = (Calendar) calendar.clone();
         tempCalendar.set(Calendar.DAY_OF_MONTH, 1); // 월의 첫 번째 날짜로 설정
         int maxDay = tempCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-
+        int scrollTo = 0;
         for (int i = 1; i <= maxDay; i++) {
             Button dayButton = new Button(this);
             final int selectedDay = i; // 람다에서 사용하기 위해 final로 설정
@@ -211,7 +250,7 @@ public class MyPageActivity extends AppCompatActivity {
             // 현재 날짜 강조
             if (selectedDay == calendar.get(Calendar.DAY_OF_MONTH)) {
                 dayButton.setBackgroundResource(R.drawable.selected_date_background);
-                System.out.println("selectedDay: "+ selectedDay);
+                scrollTo = dayButton.getLeft();
             } else {
                 dayButton.setBackgroundResource(R.drawable.default_date_background);
             }
@@ -226,6 +265,7 @@ public class MyPageActivity extends AppCompatActivity {
         }
 
         updateDate(); // 월 정보 업데이트
+//        daysScrollContainer.scrollTo(finalScrollTo, 0);
     }
 
     private void onDateSelected(int selectedDay) {
@@ -236,7 +276,8 @@ public class MyPageActivity extends AppCompatActivity {
     // 현재 월 업데이트
     private void updateDate() {
         int month = calendar.get(Calendar.MONTH) + 1;
-        currentDateText.setText(month + "월");
+        int date = calendar.get(Calendar.DATE);
+        currentDateText.setText(month + "월 " + date + "일");
     }
 
     // 수입/지출 초기화
@@ -245,6 +286,7 @@ public class MyPageActivity extends AppCompatActivity {
         expenseList.clear();
         updateIncomeText();
         updateExpenseText();
+        loadMoneyLedger();
     }
 
     // 수입 목록 업데이트

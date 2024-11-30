@@ -44,7 +44,7 @@ public class TravelRepository extends SQLiteOpenHelper {
         Date currentDate = Calendar.getInstance().getTime();
 
         Travel checkTravel = this.findByDate(travel.getStartDate());
-        if (checkTravel != null) travel = checkTravel;
+        if (checkTravel != null) travel.setId(checkTravel.getId());
         ContentValues contentValues = new ContentValues();
         contentValues.put(Travel.TITLE_FIELD, travel.getTitle());
         contentValues.put(Travel.PLACE_FIELD, travel.getPlace());
