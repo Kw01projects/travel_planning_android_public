@@ -91,6 +91,9 @@ public class TodayScheduleActivity extends AppCompatActivity {
                 Travel travel = new Travel();
                 travel.setStartDate(parsedSelectedDate);
                 RepositoryFactory.getTravelRepository(this).save(travel);
+//                Intent homeIntent = new Intent(this, HomeActivity.class);
+//                homeIntent.putExtra("position", getIntent().getIntExtra("position", -1));
+//                homeIntent.putExtra("result", 0);
                 setResult(0, null);
                 this.finish();
             }

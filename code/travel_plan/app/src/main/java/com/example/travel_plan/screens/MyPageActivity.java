@@ -211,6 +211,7 @@ public class MyPageActivity extends AppCompatActivity {
             // 현재 날짜 강조
             if (selectedDay == calendar.get(Calendar.DAY_OF_MONTH)) {
                 dayButton.setBackgroundResource(R.drawable.selected_date_background);
+                System.out.println("selectedDay: "+ selectedDay);
             } else {
                 dayButton.setBackgroundResource(R.drawable.default_date_background);
             }

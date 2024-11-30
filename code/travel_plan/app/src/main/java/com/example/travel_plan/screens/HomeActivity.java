@@ -13,7 +13,6 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,7 +23,6 @@ import com.example.travel_plan.entities.User;
 import com.example.travel_plan.repositories.RepositoryFactory;
 import com.example.travel_plan.repositories.TravelRepository;
 import com.example.travel_plan.repositories.UserRepository;
-import com.example.travel_plan.screens.map.MapsActivity;
 import com.example.travel_plan.screens.schedule.TodayScheduleActivity;
 import com.example.travel_plan.utils.DateUtils;
 import com.example.travel_plan.viewModels.UserViewModel;
@@ -44,12 +42,11 @@ public class HomeActivity extends AppCompatActivity {
     private TextView currentMonth;
     private TextView travelScheduleStartDate;
     private TextView travelScheduleEndDate;
-    private String startDate = null; // 여행 시작 날짜
-    private String endDate = null; // 여행 종료 날짜
     private CalendarAdapter calendarAdapter;
 
     private UserRepository userRepository;
     private User myInfo;
+    private TravelRepository travelRepository;
     private static String currentMonthYear;
 
     @Override
@@ -98,7 +95,7 @@ public class HomeActivity extends AppCompatActivity {
             if (!selectedDate.isEmpty()) {
                 Intent intent = new Intent(HomeActivity.this, TodayScheduleActivity.class);
                 intent.putExtra("selectedDate", selectedDate);
-                startActivity(intent);
+                startActivityForResult(intent, 0);
             }
         });
 
@@ -110,8 +107,6 @@ public class HomeActivity extends AppCompatActivity {
         if (myInfo.getStartDate() != null && myInfo.getEndDate() != null) {
             travelScheduleStartDate.setText(DateUtils.formatReadableDate(myInfo.getStartDate()));
             travelScheduleEndDate.setText(DateUtils.formatReadableDate(myInfo.getEndDate()));
-            startDate = DateUtils.formatDbDate(myInfo.getStartDate());
-            endDate = DateUtils.formatDbDate(myInfo.getEndDate());
         }
 
         UserViewModel userViewModel = (new ViewModelProvider(this).get(UserViewModel.class));
@@ -122,6 +117,14 @@ public class HomeActivity extends AppCompatActivity {
                     System.out.println("user changed: ");
                     userNickname.setText(userState.getNickName());
                 });
+
+        travelRepository = RepositoryFactory.getTravelRepository(this);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        updateCalendar();
     }
 
     private void setupCalendar() {
@@ -207,15 +210,19 @@ public class HomeActivity extends AppCompatActivity {
         int day = tempCalendar.get(Calendar.DAY_OF_MONTH);
 
         new DatePickerDialog(this, (view, selectedYear, selectedMonth, selectedDay) -> {
-            String selectedDate = selectedYear + "." + (selectedMonth + 1) + "." + selectedDay;
+            // parse date for saving db
+            String parsedDateString = selectedYear + "-" + (selectedMonth + 1) + "-" + selectedDay;
+            Date parsedDate = DateUtils.parseDbDate(parsedDateString);
 
             if (isSelectedStartDate) {
-                startDate = selectedYear + "-" + (selectedMonth + 1) + "-" + selectedDay;
-                travelScheduleStartDate.setText(selectedDate);
+                travelScheduleStartDate.setText(parsedDateString.replace("-", "."));
+                myInfo.setStartDate(parsedDate);
             } else {
-                endDate = selectedYear + "-" + (selectedMonth + 1) + "-" + selectedDay;
-                travelScheduleEndDate.setText(selectedDate);
+                travelScheduleEndDate.setText(parsedDateString.replace("-", "."));
+                myInfo.setEndDate(parsedDate);
             }
+            if (myInfo.getStartDate() != null && myInfo.getEndDate() != null)
+                myInfo = userRepository.save(myInfo);
 
             calendarAdapter.notifyDataSetChanged(); // 선택된 날짜를 기반으로 UI 갱신
         }, year, month, day).show();
@@ -293,18 +300,17 @@ public class HomeActivity extends AppCompatActivity {
 
         private boolean isTravelDate(int day) {
             try {
-                if (startDate == null || endDate == null) return false;
-
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                if (myInfo.getStartDate() == null && myInfo.getEndDate() == null) return false;
+                String parsedDateString = currentMonthYear + "-" + day;
                 Calendar date = Calendar.getInstance();
-                date.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), day);
-
-                Date start = sdf.parse(startDate);
-                Date end = sdf.parse(endDate);
+                date.setTime(DateUtils.parseDbDate(parsedDateString));
+                Date start = myInfo.getStartDate();
+                Date end = myInfo.getEndDate();
                 return !date.getTime().before(start) && !date.getTime().after(end);
             } catch (Exception e) {
                 return false;
             }
         }
+
     }
 }

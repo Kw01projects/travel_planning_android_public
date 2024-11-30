@@ -1,4 +1,4 @@
-package com.example.travel_plan.screens.map;
+package com.example.travel_plan.screens;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,29 +15,45 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.travel_plan.R;
+import com.example.travel_plan.entities.MapPlace;
+import com.example.travel_plan.repositories.MapPlaceRepository;
+import com.example.travel_plan.repositories.RepositoryFactory;
+import com.example.travel_plan.screens.map.SavedPlacesActivity;
+import com.example.travel_plan.screens.map.TravelspotListActivity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private LatLng selectedLocation;
+    private Marker preMarker; // flag to remove prev marker
+
+    private MapPlaceRepository mapPlaceRepository;
+    private List<MapPlace> savedMapPlaces;
+    private Map<String, Boolean> savedMapPlacesMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        mapPlaceRepository = RepositoryFactory.getMapPlaceRepository(this);
         // 지도 초기화
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -57,8 +73,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         btnSaveToTravelList.setOnClickListener(v -> {
             if (selectedLocation != null) {
                 String locationName = getAddressFromLatLng(selectedLocation);
-
                 if (locationName != null) {
+                    this.checkAndSaveMapPlace("TRAVEL", locationName, selectedLocation);
+
                     saveToPreferences("TravelList", locationName);
                     Toast.makeText(this, "여행지 리스트에 저장되었습니다!", Toast.LENGTH_SHORT).show();
                 } else {
@@ -75,6 +92,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String locationName = getAddressFromLatLng(selectedLocation);
 
                 if (locationName != null) {
+                    this.checkAndSaveMapPlace("NORMAL", locationName, selectedLocation);
                     saveToPreferences("SavedPlaces", locationName);
                     Toast.makeText(this, "저장한 장소 리스트에 저장되었습니다!", Toast.LENGTH_SHORT).show();
                 } else {
@@ -84,6 +102,70 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Toast.makeText(this, "지도를 클릭하여 위치를 선택하세요.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        mMap = googleMap;
+
+//        try {
+//            // current gps location is incorrect
+//            GPSTrackerService tracker = new GPSTrackerService(this);
+//            if (tracker.canGetLocation()) {
+//                LatLng seoul = new LatLng(tracker.getLatitude(), tracker.getLongitude());
+//                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 15));
+//            } else {
+//                tracker.showSettingsAlert();
+//            }
+//        } catch (Exception ex) {
+//            System.out.println("Cannot set current location");
+//        }
+        LatLng seoul = new LatLng(37.6194, 127.0598);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 15));
+
+        // 지도 클릭 리스너
+        mMap.setOnMapClickListener(latLng -> {
+            // if prev marker was saved, don't remove it
+            if (preMarker != null && !this.savedMapPlacesMap.containsKey(
+                    preMarker.getPosition().latitude +
+                            String.valueOf(preMarker.getPosition().latitude)
+            )) preMarker.remove();
+
+            selectedLocation = latLng;
+            preMarker = mMap.addMarker(new MarkerOptions().position(latLng).title("선택된 위치"));
+        });
+        init();
+    }
+
+    private void init() {
+        savedMapPlaces = new ArrayList<>();
+        savedMapPlacesMap = new HashMap<>();
+        savedMapPlaces.addAll(mapPlaceRepository.list("TRAVEL"));
+        savedMapPlaces.addAll(mapPlaceRepository.list("NORMAL"));
+        for (MapPlace mapPlace : savedMapPlaces)
+            this.addMarker(mapPlace);
+    }
+
+    private void addMarker(MapPlace mapPlace) {
+        this.savedMapPlacesMap.put(mapPlace.getLatitude() + mapPlace.getLongitude(), true);
+        mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(Double.parseDouble(mapPlace.getLatitude()), Double.parseDouble(mapPlace.getLongitude())))
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                .title(""));
+    }
+
+    private void checkAndSaveMapPlace(String travel, String locationName, LatLng selectedLocation) {
+        if (mapPlaceRepository.findByAddress(travel, locationName) != null) {
+            Toast.makeText(this, "주소는 이미 저정되었습니다.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        MapPlace mapPlace = new MapPlace();
+        mapPlace.setAddress(locationName);
+        mapPlace.setLatitude(String.valueOf(selectedLocation.latitude));
+        mapPlace.setLongitude(String.valueOf(selectedLocation.longitude));
+        mapPlace.setType(travel);
+        mapPlaceRepository.save(mapPlace);
+        addMarker(mapPlace);
     }
 
     private void showPopupMenu(View view) {
@@ -100,21 +182,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             return false;
         });
         popupMenu.show();
-    }
-
-    @Override
-    public void onMapReady(@NonNull GoogleMap googleMap) {
-        mMap = googleMap;
-
-        LatLng seoul = new LatLng(37.5665, 126.9780);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 15));
-
-        // 지도 클릭 리스너
-        mMap.setOnMapClickListener(latLng -> {
-            selectedLocation = latLng;
-            mMap.clear();
-            mMap.addMarker(new MarkerOptions().position(latLng).title("선택된 위치"));
-        });
     }
 
     /**

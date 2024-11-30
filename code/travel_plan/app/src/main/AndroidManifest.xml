@@ -57,7 +57,7 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <activity android:name=".screens.map.MapsActivity" />
+        <activity android:name=".screens.MapsActivity" />
         <activity android:name=".screens.map.TravelspotListActivity" />
         <activity android:name=".screens.map.SavedPlacesActivity" />
     </application>
