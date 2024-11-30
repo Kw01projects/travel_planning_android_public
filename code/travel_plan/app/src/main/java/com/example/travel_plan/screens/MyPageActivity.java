@@ -219,7 +219,7 @@ public class MyPageActivity extends AppCompatActivity {
             expenseList.add(moneyLedger.getTitle() + ": " + moneyLedger.getAmount() + "원");
 
         updateIncomeText();
-        updateIncomeText();
+        updateExpenseText();
     }
 
     private int dpToPx(int dp) {
